@@ -1,22 +1,25 @@
 import express, { json } from "express";
 import cors from "cors";
 import mysql from "mysql";
+import dotenv from 'dotenv'
 
+
+dotenv.config({path: './.env'})
 const app = express();
 app.use(express.json());
 app.use(cors());
 const db = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "xuantruong0307@",
-    database: "quanlydatsan",
+    host: process.env.HOST,
+    user: process.env.USER,
+    password: process.env.PASSWORD,
+    database: process.env.DATABASE,
 });
 
-app.get("/", (req, res) => {
+app.get("", (req, res) => {
     res.json("Xin chào, đây là server quanlysanbong");
 });
 
-app.listen(8800, () => {
+app.listen(process.env.PORT, () => {
     console.log("Connected to server!!!");
 });
 
