@@ -3,7 +3,6 @@ import cors from "cors";
 import mysql from "mysql";
 import dotenv from 'dotenv'
 
-
 dotenv.config({path: './.env'})
 const app = express();
 app.use(express.json());
@@ -23,17 +22,11 @@ app.listen(process.env.PORT, () => {
     console.log("Connected to server!!!");
 });
 
-app.get("/accounts", (req, res) => {
-    const query = "select * from taikhoan";
-    db.query(query, (err, data) => {
-        if (err) return res.json(err);
-        return res.json(data);
-    });
-});
+
 
 app.get("/football-pitch/:id", (req, res) => {
     const query =
-        "SELECT id_sanbong, tensanbong, id_xaphuong, id_trangthai_sanbong, id_taikhoan, thoigiandong, thoigianmo, hinhanh, gioithieu, diachicuthe , (select json_arrayagg(json_object('id_san', id_san, 'tensan', tensan))   from san where san.id_sanbong = sanbong.id_sanbong group by sanbong.id_sanbong) as 'danhsachsancon' FROM sanbong where id_sanbong = ?";
+        "SELECT id_sanbong, tensanbong, xaphuong.id_xaphuong, id_trangthai_sanbong, id_taikhoan, thoigiandong, thoigianmo, hinhanh, gioithieu, diachicuthe , (select json_arrayagg(json_object('id_san', id_san, 'tensan', tensan)) from san  where san.id_sanbong = sanbong.id_sanbong group by sanbong.id_sanbong) as 'danhsachsancon' , concat(diachicuthe, ', ', tenxaphuong, ', ', tenquanhuyen, ', ', tentinhthanh) as diachi FROM sanbong, xaphuong, quanhuyen, tinhthanh where sanbong.id_xaphuong = xaphuong.id_xaphuong and xaphuong.id_quanhuyen = quanhuyen.id_quanhuyen and quanhuyen.id_tinhthanh = tinhthanh.id_tinhthanh and id_sanbong = ?";
 
     const id = req.params.id;
     var dataFootballPitches = {};
@@ -46,13 +39,13 @@ app.get("/football-pitch/:id", (req, res) => {
             dataFootballPitches.data.id_sanbong = item.id_sanbong;
             dataFootballPitches.data.tensanbong = item.tensanbong;
             dataFootballPitches.data.id_xaphuong = item.id_xaphuong;
-            dataFootballPitches.data.id_trangthai_sanbong =
-                item.id_trangthai_sanbong;
+            dataFootballPitches.data.id_trangthai_sanbong = item.id_trangthai_sanbong;
             dataFootballPitches.data.thoigianmo = item.thoigianmo;
             dataFootballPitches.data.thoigiandong = item.thoigiandong;
             dataFootballPitches.data.hinhanh = item.hinhanh;
             dataFootballPitches.data.gioithieu = item.gioithieu;
             dataFootballPitches.data.diachicuthe = item.diachicuthe;
+            dataFootballPitches.data.diachi = item.diachi;
             dataFootballPitches.data.danhsachsancon = JSON.parse(
                 item.danhsachsancon
             );
@@ -212,12 +205,13 @@ app.get("/checkExsitsUser", (req, res) => {
 });
 
 app.get("/accounts", (req, res) => {
-    const query = "SELECT * FROM taikhoan;";
+    const query = "SELECT * FROM taikhoan, loaitaikhoan, trangthai_taikhoan WHERE taikhoan.id_loaitaikhoan = loaitaikhoan.id_loaitaikhoan and taikhoan.id_trangthai_taikhoan = trangthai_taikhoan.id_trangthai_taikhoan"
     db.query(query,  (err, data) => {
         if (err) return res.json(err);
         return res.json(data);
     });
 });
+
 
 app.get("/account", (req, res) => {
     const query = "SELECT tentaikhoan,matkhau,email, anhdaidien,hoten,sdt, substring(ngaysinh, 9, 2) as ngay, substring(ngaysinh, 6, 2) as thang, substring(ngaysinh, 1, 4) as nam , concat( 'Ngày ',substring(ngaysinh, 9, 2), ' tháng ',substring(ngaysinh, 6, 2),' năm ', substring(ngaysinh, 1, 4)) as 'ngaysinh' , concat(diachicuthe, ', ' , tenxaphuong , ', ', tenquanhuyen, ', ', tentinhthanh) as diachi, xaphuong.id_xaphuong, quanhuyen.id_quanhuyen, tinhthanh.id_tinhthanh, diachicuthe, id_loaitaikhoan FROM taikhoan, xaphuong, quanhuyen, tinhthanh where taikhoan.id_xaphuong = xaphuong.id_xaphuong and xaphuong.id_quanhuyen = quanhuyen.id_quanhuyen and quanhuyen.id_tinhthanh = tinhthanh.id_tinhthanh and id_taikhoan = ?"
@@ -237,13 +231,6 @@ app.get("/footballpitchlast", (req, res) => {
     });
 });
 
-app.get("/accounts-pendding", (req, res) => {
-    const query = "SELECT * FROM taikhoan, loaitaikhoan, trangthai_taikhoan WHERE taikhoan.id_loaitaikhoan = loaitaikhoan.id_loaitaikhoan and taikhoan.id_trangthai_taikhoan = trangthai_taikhoan.id_trangthai_taikhoan and trangthai_taikhoan.id_trangthai_taikhoan = 3"
-    db.query(query,  (err, data) => {
-        if (err) return res.json(err);
-        return res.json(data);
-    });
-});
 
 
 
@@ -266,11 +253,18 @@ app.post("/booking", (req, res) => {
     });
 });
 
+app.get("/accounts-pendding", (req, res) => {
+    const query = "SELECT * FROM taikhoan, loaitaikhoan, trangthai_taikhoan WHERE taikhoan.id_loaitaikhoan = loaitaikhoan.id_loaitaikhoan and taikhoan.id_trangthai_taikhoan = trangthai_taikhoan.id_trangthai_taikhoan and trangthai_taikhoan.id_trangthai_taikhoan = '3'"
+    db.query(query,  (err, data) => {
+        if (err) return res.json(err);
+        return res.json(data);
+    });
+});
+
 
 app.put("/accounts-pendding/:id", (req, res) => {
     const query = "UPDATE taikhoan SET id_trangthai_taikhoan = 1 WHERE  id_taikhoan = ?";
-    const tt = 1
-    const id = req.query.id
+    const id = req.params.id
     db.query(query, [id],  (err, data) => {
         if (err) return res.json(err);
         return res.json({
@@ -280,10 +274,42 @@ app.put("/accounts-pendding/:id", (req, res) => {
     });
 });
 
+
+
+
 app.get("/history/:idAccount", (req, res) => {
     const query = "SELECT * FROM datsan, san, sanbong, khunggio WHERE datsan.id_san = san.id_san and khunggio.id_khunggio = datsan.id_khunggio and san.id_sanbong = sanbong.id_sanbong and datsan.id_taikhoan = ? and id_trangthai_datsan = 4"
     const idAccount = req.params.idAccount
     db.query(query, [idAccount],  (err, data) => {
+        if (err) return res.json(err);
+        return res.json(data);
+    });
+});
+
+
+app.put("/change-password", (req, res) => {
+    const query = "UPDATE taikhoan SET matkhau = ? WHERE id_taikhoan = ?;"
+    const values = [
+        req.query.matkhau,
+        req.query.id_taikhoan
+
+    ]
+    db.query(query, values,  (err, data) => {
+        if (err) return res.json(err);
+        return res.json({
+            status: 200,
+            message: "Cập nhật mật khẩu thành công"
+        });
+    });
+});
+
+
+app.get("/check-password", (req, res) => {
+    const query = "SELECT * FROM taikhoan  WHERE id_taikhoan = ? and matkhau = ?; "
+
+    const id_taikhoan =  req.query.id_taikhoan
+    const matkhau =  req.query.matkhau
+    db.query(query, [id_taikhoan, matkhau], (err, data) => {
         if (err) return res.json(err);
         return res.json(data);
     });
