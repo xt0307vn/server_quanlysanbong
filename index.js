@@ -314,3 +314,14 @@ app.get("/check-password", (req, res) => {
         return res.json(data);
     });
 });
+
+app.get("/manager-football-pitch/:idAccount", (req, res) => {
+    const q = "SELECT *, concat(diachicuthe, ', ', tenxaphuong, ', ',tenquanhuyen, ', ',tentinhthanh) as diachi FROM sanbong, xaphuong, quanhuyen, tinhthanh WHERE sanbong.id_xaphuong = xaphuong.id_xaphuong and xaphuong.id_quanhuyen = quanhuyen.id_quanhuyen and quanhuyen.id_tinhthanh = tinhthanh.id_tinhthanh and id_taikhoan = ?"
+    const idAccount = req.params.idAccount
+    db.query(q, [idAccount], (err, data)=> {
+        if (err) return res.json(err);
+        return res.json(data);
+    })
+
+})
+
